@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>恋愛タイプ診断</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      background: #0f0f1a;
+      color: #f0f0f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 560px;
+      width: 100%;
+    }
+
+    /* Start screen */
+    #start-screen {
+      text-align: center;
+    }
+
+    .title-emoji {
+      font-size: 64px;
+      display: block;
+      margin-bottom: 16px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      letter-spacing: 0.05em;
+      background: linear-gradient(135deg, #ff6b9d, #ff9a5c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #aaa;
+      margin-bottom: 40px;
+      line-height: 1.7;
+    }
+
+    .btn-start {
+      background: linear-gradient(135deg, #ff6b9d, #ff9a5c);
+      color: #fff;
+      border: none;
+      padding: 16px 48px;
+      font-size: 18px;
+      font-weight: 700;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 24px rgba(255, 107, 157, 0.35);
+      letter-spacing: 0.08em;
+    }
+
+    .btn-start:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(255, 107, 157, 0.5);
+    }
+
+    .btn-start:active {
+      transform: translateY(0);
+    }
+
+    /* Quiz screen */
+    #quiz-screen {
+      display: none;
+    }
+
+    .progress-bar-wrap {
+      background: #1e1e30;
+      border-radius: 10px;
+      height: 6px;
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #ff6b9d, #ff9a5c);
+      border-radius: 10px;
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .question-count {
+      font-size: 12px;
+      color: #888;
+      text-align: right;
+      margin-bottom: 12px;
+      letter-spacing: 0.05em;
+    }
+
+    .question-text {
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.65;
+      margin-bottom: 28px;
+      min-height: 72px;
+    }
+
+    .choices {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .choice-btn {
+      background: #1e1e30;
+      color: #f0f0f0;
+      border: 2px solid #2a2a40;
+      border-radius: 14px;
+      padding: 14px 18px;
+      font-size: 14px;
+      line-height: 1.6;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .choice-btn:hover {
+      background: #28283e;
+      border-color: #ff6b9d;
+      transform: translateX(4px);
+    }
+
+    .choice-btn:active {
+      transform: translateX(2px);
+    }
+
+    .choice-label {
+      font-weight: 700;
+      color: #ff9a5c;
+      font-size: 15px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* Result screen */
+    #result-screen {
+      display: none;
+      text-align: center;
+    }
+
+    .result-emoji {
+      font-size: 72px;
+      display: block;
+      margin-bottom: 16px;
+      animation: pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes pop-in {
+      from { transform: scale(0.4); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .result-type-name {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #ff6b9d, #ff9a5c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .result-description {
+      font-size: 15px;
+      line-height: 1.8;
+      color: #ddd;
+      background: #1e1e30;
+      border-radius: 16px;
+      padding: 20px 22px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .result-strengths {
+      font-size: 13px;
+      color: #ff9a5c;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      margin-top: 14px;
+    }
+
+    .btn-retry {
+      background: transparent;
+      color: #ff6b9d;
+      border: 2px solid #ff6b9d;
+      padding: 14px 40px;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      letter-spacing: 0.06em;
+    }
+
+    .btn-retry:hover {
+      background: #ff6b9d;
+      color: #fff;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Start Screen -->
+    <div id="start-screen">
+      <span class="title-emoji">💘</span>
+      <h1>恋愛タイプ診断</h1>
+      <p class="subtitle">5問の質問に答えるだけ。<br>あなたの恋愛タイプがわかります。</p>
+      <button class="btn-start" onclick="startQuiz()">診断スタート</button>
+    </div>
+
+    <!-- Quiz Screen -->
+    <div id="quiz-screen">
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+      <div class="question-count" id="question-count"></div>
+      <div class="question-text" id="question-text"></div>
+      <div class="choices" id="choices"></div>
+    </div>
+
+    <!-- Result Screen -->
+    <div id="result-screen">
+      <span class="result-emoji" id="result-emoji"></span>
+      <div class="result-type-name" id="result-type-name"></div>
+      <div class="result-description">
+        <div id="result-body"></div>
+        <div class="result-strengths" id="result-strengths"></div>
+      </div>
+      <button class="btn-retry" onclick="resetQuiz()">もう一度やる</button>
+    </div>
+
+  </div>
+
+  <script>
+    // Types: 0=fire(情熱), 1=mystery(謎), 2=angel(癒し), 3=devil(悪魔)
+    const TYPES = [
+      {
+        emoji: '🔥',
+        name: '情熱の一途系',
+        body: '好きになったら全部やろうとするタイプ。それは長所だけど、たまに相手がびっくりすることもある。でも本気の人間ってそういうもの。その熱さ、一生持ち続けてください。',
+        strengths: '強み：誠実さ、情熱、行動力'
+      },
+      {
+        emoji: '🎭',
+        name: '謎めいたミステリー系',
+        body: '近づきたいけど、何考えてるかわからない。それがあなたの武器。でも正直に言うと、たまには素を出してみて。その方が絶対いい。',
+        strengths: '強み：独自性、深さ、知的魅力'
+      },
+      {
+        emoji: '🌸',
+        name: '癒しの天使系',
+        body: 'あなたがいるだけで場が和む。それって本物の才能です。ただ、自分を後回しにしすぎないで。あなたの幸せが、周りの幸せにもつながるから。',
+        strengths: '強み：共感力、優しさ、包容力'
+      },
+      {
+        emoji: '😈',
+        name: '振り回す悪魔系',
+        body: '好きにさせておいて逃げるタイプ。でもそれは悪意じゃなくて、ただ自由が好きなだけ。縛られるのが嫌いなあなたには、同じ空気感を持てる人が合う。',
+        strengths: '強み：自由さ、独立心、カリスマ性'
+      }
+    ];
+
+    // Questions with choices mapped to type indices [fire, mystery, angel, devil]
+    // Each choice: { label, text, type }
+    const QUESTIONS = [
+      {
+        text: '財布に200円しかない。でも500円の弁当が食いたい。どうする？',
+        choices: [
+          { label: 'A', text: '諦めて100円のパンにする', type: 2 },        // 癒し：受け入れる
+          { label: 'B', text: '誰かに300円借りる', type: 1 },              // 謎：他者を利用
+          { label: 'C', text: 'カードで買う（後悔する）', type: 3 },       // 悪魔：衝動
+          { label: 'D', text: '絶対買う、方法は後で考える', type: 0 }      // 情熱：とにかく行動
+        ]
+      },
+      {
+        text: '突然、3日間ひとりで過ごせる時間ができた。何する？',
+        choices: [
+          { label: 'A', text: 'とにかく誰かに連絡する', type: 2 },         // 癒し：つながり重視
+          { label: 'B', text: 'ひたすら趣味に没頭する', type: 0 },         // 情熱：集中
+          { label: 'C', text: '特に何もせず漂う', type: 3 },               // 悪魔：自由
+          { label: 'D', text: '計画立てて全部こなす', type: 1 }            // 謎：戦略的
+        ]
+      },
+      {
+        text: '好きな映画のジャンルは？',
+        choices: [
+          { label: 'A', text: 'アクション・冒険系', type: 0 },             // 情熱：行動力
+          { label: 'B', text: 'ラブストーリー・ドラマ', type: 2 },         // 癒し：共感
+          { label: 'C', text: 'ホラー・サスペンス', type: 1 },             // 謎：深さ
+          { label: 'D', text: 'コメディ・なんでもOK', type: 3 }            // 悪魔：自由
+        ]
+      },
+      {
+        text: '朝起きてまず何する？',
+        choices: [
+          { label: 'A', text: '即スマホチェック', type: 2 },               // 癒し：つながり
+          { label: 'B', text: 'ぼーっとしてから動く', type: 1 },           // 謎：内省
+          { label: 'C', text: 'すぐ活動開始', type: 0 },                   // 情熱：行動
+          { label: 'D', text: '二度寝する', type: 3 }                      // 悪魔：自由
+        ]
+      },
+      {
+        text: '道に千円落ちてた。どうする？',
+        choices: [
+          { label: 'A', text: '即交番に届ける', type: 0 },                 // 情熱：誠実
+          { label: 'B', text: 'うっすら迷って届ける', type: 2 },           // 癒し：優しさ
+          { label: 'C', text: 'ラッキーと思いながら届ける', type: 1 },     // 謎：複雑な内面
+          { label: 'D', text: '神様からのプレゼントだと思って使う', type: 3 } // 悪魔：自由
+        ]
+      }
+    ];
+
+    let current = 0;
+    let scores = [0, 0, 0, 0]; // fire, mystery, angel, devil
+
+    function startQuiz() {
+      current = 0;
+      scores = [0, 0, 0, 0];
+      document.getElementById('start-screen').style.display = 'none';
+      document.getElementById('quiz-screen').style.display = 'block';
+      showQuestion();
+    }
+
+    function showQuestion() {
+      const q = QUESTIONS[current];
+      const total = QUESTIONS.length;
+
+      document.getElementById('progress-bar').style.width = ((current / total) * 100) + '%';
+      document.getElementById('question-count').textContent = `${current + 1} / ${total}`;
+      document.getElementById('question-text').textContent = `Q${current + 1}. ${q.text}`;
+
+      const choicesEl = document.getElementById('choices');
+      choicesEl.innerHTML = '';
+      q.choices.forEach(choice => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.innerHTML = `<span class="choice-label">${choice.label}</span><span>${choice.text}</span>`;
+        btn.onclick = () => selectAnswer(choice.type);
+        choicesEl.appendChild(btn);
+      });
+    }
+
+    function selectAnswer(type) {
+      scores[type]++;
+      current++;
+      if (current < QUESTIONS.length) {
+        showQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      // Find highest score (first max wins in case of tie)
+      let maxScore = -1;
+      let resultType = 0;
+      scores.forEach((s, i) => {
+        if (s > maxScore) {
+          maxScore = s;
+          resultType = i;
+        }
+      });
+
+      const type = TYPES[resultType];
+      document.getElementById('quiz-screen').style.display = 'none';
+      document.getElementById('result-screen').style.display = 'block';
+      document.getElementById('result-emoji').textContent = type.emoji;
+      document.getElementById('result-type-name').textContent = type.name;
+      document.getElementById('result-body').textContent = type.body;
+      document.getElementById('result-strengths').textContent = type.strengths;
+
+      // Animate progress bar to 100%
+      document.getElementById('progress-bar').style.width = '100%';
+    }
+
+    function resetQuiz() {
+      document.getElementById('result-screen').style.display = 'none';
+      document.getElementById('start-screen').style.display = 'block';
+    }
+  </script>
+</body>
+</html>

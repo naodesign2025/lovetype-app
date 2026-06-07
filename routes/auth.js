@@ -6,10 +6,10 @@ const supabase = require('../lib/supabase');
 const router = express.Router();
 
 router.post('/register', async (req, res) => {
-  const { email, password } = req.body;
+  const { username, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({ error: 'メールとパスワードは必須です' });
+  if (!username || !password) {
+    return res.status(400).json({ error: 'ユーザー名とパスワードは必須です' });
   }
   if (password.length < 8) {
     return res.status(400).json({ error: 'パスワードは8文字以上にしてください' });
@@ -19,30 +19,30 @@ router.post('/register', async (req, res) => {
     const { data: existing } = await supabase
       .from('users')
       .select('id')
-      .eq('email', email)
+      .eq('username', username)
       .maybeSingle();
 
     if (existing) {
-      return res.status(409).json({ error: 'このメールアドレスはすでに登録されています' });
+      return res.status(409).json({ error: 'このユーザー名はすでに使われています' });
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
 
     const { data: user, error } = await supabase
       .from('users')
-      .insert({ email, password_hash: passwordHash })
-      .select('id, email')
+      .insert({ username, password_hash: passwordHash })
+      .select('id, username')
       .single();
 
     if (error) throw error;
 
     const token = jwt.sign(
-      { userId: user.id, email: user.email },
+      { userId: user.id, username: user.username },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
-    res.status(201).json({ token, user: { id: user.id, email: user.email } });
+    res.status(201).json({ token, user: { id: user.id, username: user.username } });
   } catch (err) {
     console.error('Register error:', err);
     res.status(500).json({ error: 'サーバーエラーが発生しました' });
@@ -50,35 +50,35 @@ router.post('/register', async (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { username, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({ error: 'メールとパスワードは必須です' });
+  if (!username || !password) {
+    return res.status(400).json({ error: 'ユーザー名とパスワードは必須です' });
   }
 
   try {
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, email, password_hash')
-      .eq('email', email)
+      .select('id, username, password_hash')
+      .eq('username', username)
       .maybeSingle();
 
     if (error || !user) {
-      return res.status(401).json({ error: 'メールまたはパスワードが正しくありません' });
+      return res.status(401).json({ error: 'ユーザー名またはパスワードが正しくありません' });
     }
 
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) {
-      return res.status(401).json({ error: 'メールまたはパスワードが正しくありません' });
+      return res.status(401).json({ error: 'ユーザー名またはパスワードが正しくありません' });
     }
 
     const token = jwt.sign(
-      { userId: user.id, email: user.email },
+      { userId: user.id, username: user.username },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
-    res.json({ token, user: { id: user.id, email: user.email } });
+    res.json({ token, user: { id: user.id, username: user.username } });
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ error: 'サーバーエラーが発生しました' });
